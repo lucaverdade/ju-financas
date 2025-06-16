@@ -8,22 +8,22 @@ app = Flask(__name__)
 CSV_FILE = "gastos.csv"
 JSON_FILE = "categorias.json"
 
-# Inicializa os arquivos se não existirem
+# Inicializa arquivos
 if not os.path.exists(CSV_FILE):
     pd.DataFrame(columns=["data", "valor", "setor", "mensagem"]).to_csv(CSV_FILE, index=False)
 
 if not os.path.exists(JSON_FILE):
     categorias_iniciais = {
-        "alimentacao": ["mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro", "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao", "cafe", "açai", "outback"],
-        "lazer": ["cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque", "netflix", "spotify", "napraia"],
-        "transporte": ["uber", "99", "onibus", "gasolina", "combustivel", "metrô", "transporte", "passagem"],
-        "casa": ["aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"],
+        "alimentacao": ["mercado", "comida", "padaria", "restaurante", "pizza", "açai"],
+        "transporte": ["uber", "onibus", "99", "metro", "gasolina", "combustivel"],
+        "lazer": ["cinema", "shopping", "bar", "balada", "festa", "show"],
+        "casa": ["aluguel", "condominio", "agua", "luz", "energia", "net", "internet"],
         "outros": []
     }
     with open(JSON_FILE, "w") as f:
         json.dump(categorias_iniciais, f, indent=2)
 
-# Funções auxiliares
+# Auxiliares
 def remover_acentos(txt):
     return unicodedata.normalize("NFKD", txt).encode("ASCII", "ignore").decode("ASCII")
 
@@ -45,7 +45,9 @@ def classificar_setor(texto):
     return "outros"
 
 def extrair_dados(msg):
-    match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+).*(no|na|em)?\s*(.*)", msg.lower())
+    msg = remover_acentos(msg.lower())
+    padrao = r"(gastei|gasto)\s*R?\$?\s*([\d.,]+)\s*(no|na|em)?\s*(.*)"
+    match = re.search(padrao, msg)
     if match:
         valor = float(match.group(2).replace(",", "."))
         descricao = match.group(4).strip()
@@ -68,10 +70,8 @@ def responder():
     msg = request.form.get("Body", "").strip()
     resposta = MessagingResponse()
     df = pd.read_csv(CSV_FILE)
-
     texto = remover_acentos(msg.lower())
 
-    # 1. Relatório
     if "relatorio" in texto:
         if df.empty:
             resposta.message("📭 Nenhum gasto registrado ainda.")
@@ -85,7 +85,6 @@ def responder():
             resposta.message(texto_resp)
         return str(resposta)
 
-    # 2. Total por período
     if "total hoje" in texto:
         total = total_por_periodo(df, 0)
         resposta.message(f"📅 Total de hoje: R$ {total:.2f}")
@@ -101,7 +100,6 @@ def responder():
         resposta.message(f"📆 Total do mês: R$ {total:.2f}")
         return str(resposta)
 
-    # 3. Consulta de categorias
     if "listar categorias" in texto:
         categorias = carregar_categorias()
         msg_cat = "📚 *Categorias cadastradas:*\n"
@@ -110,7 +108,6 @@ def responder():
         resposta.message(msg_cat)
         return str(resposta)
 
-    # 4. Cadastro de nova categoria
     match_cat = re.search(r"nova categoria (\w+) com (.+)", texto)
     if match_cat:
         nova_cat = match_cat.group(1).strip()
@@ -124,7 +121,6 @@ def responder():
             resposta.message(f"✅ Categoria *{nova_cat}* criada com: {', '.join(palavras)}")
         return str(resposta)
 
-    # 5. Editar gasto
     if texto.startswith("editar"):
         partes = texto.split()
         if len(partes) >= 4:
@@ -144,7 +140,7 @@ def responder():
             resposta.message("❌ Comando incompleto. Ex: editar 1 valor 50")
         return str(resposta)
 
-    # 6. Registro padrão
+    # Registro de gasto padrão
     valor, setor, descricao = extrair_dados(msg)
     if valor:
         nova_linha = {
@@ -157,5 +153,5 @@ def responder():
         df.to_csv(CSV_FILE, index=False)
         resposta.message(f"✅ Gasto de R$ {valor:.2f} em *{descricao}* registrado na categoria *{setor}*.")
     else:
-        resposta.message("❌ Tente algo como: *gastei 30 no mercado*, *relatorio*, *total hoje*, *nova categoria lazer com praia, bar*")
+        resposta.message("❌ Tente algo como: *gastei 30 no mercado*, *relatorio*, *nova categoria saude com farmacia, remedio*")
     return str(resposta)
