@@ -5,7 +5,7 @@ import os, re, json, unicodedata
 from datetime import datetime, timedelta
 
 # Versão do bot para debug
-DEBUG_VERSION = "vDEBUG 1.1"
+DEBUG_VERSION = "vDEBUG 1.2"
 
 print(f"✅ Bot de gastos iniciado — {DEBUG_VERSION}")
 
@@ -26,7 +26,7 @@ if not os.path.exists(JSON_FILE):
                         "cafe", "açai", "outback"],
         "lazer": ["cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque",
                   "netflix", "spotify", "napraia"],
-        "transporte": ["uber", "99", "onibus", "gasolina", "combustivel", "metrô", "transporte", "passagem"],
+        "transporte": ["uber", "99", "onibus", "gasolina", "combustivel", "metro", "transporte", "passagem"],
         "casa": ["aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"],
         "outros": []
     }
@@ -47,25 +47,23 @@ def salvar_categorias(categorias):
 
 def classificar_setor(texto):
     texto_limpo = remover_acentos(texto.lower())
+    palavras_texto = re.findall(r'\b\w+\b', texto_limpo)
     categorias = carregar_categorias()
 
-    print(f"🔍 [DEBUG] Tentando classificar: '{texto}' → '{texto_limpo}'")
+    print(f"🔍 [DEBUG] Tentando classificar: '{texto}' → {palavras_texto}")
 
     for setor, palavras in categorias.items():
         for palavra in palavras:
             palavra_limpa = remover_acentos(palavra.lower())
-            padrao = rf"\b{re.escape(palavra_limpa)}\b"
-            if re.search(padrao, texto_limpo):
+            if palavra_limpa in palavras_texto:
                 print(f"✅ [DEBUG] Palavra-chave encontrada: '{palavra}' → setor '{setor}'")
                 return setor
 
     print("❌ [DEBUG] Nenhuma palavra-chave casou. Retornando 'outros'")
     return "outros"
 
-
-
 def extrair_dados(msg):
-    match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+).*(no|na|em)?\s*(.*)", msg.lower())
+    match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+).*?\s(no|na|em)?\s*(.+)", msg.lower())
     if match:
         valor = float(match.group(2).replace(",", "."))
         descricao = match.group(4).strip()
@@ -94,7 +92,7 @@ def responder():
 
     if "relatorio" in texto:
         if df.empty:
-            resposta.message("📭 Nenhum gasto registrado ainda.")
+            resposta.message("📜 Nenhum gasto registrado ainda.")
         else:
             relatorio = df.groupby("setor")["valor"].sum().reset_index()
             total = df["valor"].sum()
@@ -122,7 +120,7 @@ def responder():
 
     if "listar categorias" in texto:
         categorias = carregar_categorias()
-        msg_cat = "📚 *Categorias cadastradas:*\n"
+        msg_cat = "📃 *Categorias cadastradas:*\n"
         for setor, palavras in categorias.items():
             msg_cat += f"• *{setor}*: {', '.join(palavras) if palavras else 'Nenhuma palavra associada'}\n"
         resposta.message(msg_cat)
@@ -151,7 +149,7 @@ def responder():
                 if campo in ["valor", "setor", "mensagem"] and 0 <= indice < len(df):
                     df.loc[indice, campo] = float(novo_valor) if campo == "valor" else novo_valor
                     df.to_csv(CSV_FILE, index=False)
-                    resposta.message(f"✏️ Gasto #{indice+1} atualizado.")
+                    resposta.message(f"✍️ Gasto #{indice+1} atualizado.")
                 else:
                     resposta.message("❌ Campo inválido ou índice fora do alcance.")
             except:
