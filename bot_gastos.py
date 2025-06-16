@@ -4,31 +4,27 @@ import pandas as pd
 import os, re, json, unicodedata
 from datetime import datetime, timedelta
 
+print("✅ Bot de gastos iniciado — vDEBUG 1.0")
+
 app = Flask(__name__)
 CSV_FILE = "gastos.csv"
 JSON_FILE = "categorias.json"
 
 # Inicializa arquivos
 if not os.path.exists(CSV_FILE):
+    print("📁 Criando novo arquivo de gastos.csv")
     pd.DataFrame(columns=["data", "valor", "setor", "mensagem"]).to_csv(CSV_FILE, index=False)
 
 if not os.path.exists(JSON_FILE):
+    print("📁 Criando novo arquivo categorias.json")
     categorias_iniciais = {
-        "alimentacao": [
-            "mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
-            "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
-            "cafe", "açai", "outback"
-        ],
-        "lazer": [
-            "cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque",
-            "netflix", "spotify", "napraia"
-        ],
-        "transporte": [
-            "uber", "99", "onibus", "gasolina", "combustivel", "metrô", "transporte", "passagem"
-        ],
-        "casa": [
-            "aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"
-        ],
+        "alimentacao": ["mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
+                        "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
+                        "cafe", "açai", "outback"],
+        "lazer": ["cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque",
+                  "netflix", "spotify", "napraia"],
+        "transporte": ["uber", "99", "onibus", "gasolina", "combustivel", "metrô", "transporte", "passagem"],
+        "casa": ["aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"],
         "outros": []
     }
     with open(JSON_FILE, "w") as f:
@@ -50,11 +46,15 @@ def classificar_setor(texto):
     texto_limpo = remover_acentos(texto.lower())
     categorias = carregar_categorias()
 
+    print(f"🔍 Classificando: '{texto}'")
+
     for setor, palavras in categorias.items():
         for palavra in palavras:
             palavra_limpa = remover_acentos(palavra.lower())
             if palavra_limpa in texto_limpo:
+                print(f"✅ Palavra-chave encontrada: '{palavra}' → setor '{setor}'")
                 return setor
+    print("❌ Nenhuma palavra-chave encontrada. Retornando 'outros'")
     return "outros"
 
 def extrair_dados(msg):
@@ -62,11 +62,11 @@ def extrair_dados(msg):
     if match:
         valor = float(match.group(2).replace(",", "."))
         descricao = match.group(4).strip()
-        print("🟡 Descrição:", descricao)
+        print(f"🟡 Mensagem recebida: '{msg}' | Descrição extraída: '{descricao}'")
         setor = classificar_setor(descricao)
         return valor, setor, descricao
+    print("❗ Mensagem não reconhecida:", msg)
     return None, None, None
-
 
 def total_por_periodo(df, dias):
     limite = datetime.now() - timedelta(days=dias)
@@ -168,7 +168,8 @@ def responder():
         resposta.message("❌ Tente algo como: *gastei 30 no mercado*, *relatorio*, *total hoje*, *nova categoria lazer com praia, bar*")
     return str(resposta)
 
-# 🔧 Início do app (fora de qualquer função)
+# 🔧 Início do app
 if __name__ == "__main__":
     porta = int(os.environ.get("PORT", 10000))
+    print(f"🚀 Servidor Flask rodando na porta {porta}")
     app.run(host="0.0.0.0", port=porta)
