@@ -1,3 +1,4 @@
+
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 import pandas as pd
@@ -11,10 +12,13 @@ app = Flask(__name__)
 CSV_FILE = "gastos.csv"
 JSON_FILE = "categorias.json"
 
+# Inicializa arquivos
 if not os.path.exists(CSV_FILE):
+    print("📁 Criando novo arquivo de gastos.csv")
     pd.DataFrame(columns=["data", "valor", "setor", "mensagem"]).to_csv(CSV_FILE, index=False)
 
 if not os.path.exists(JSON_FILE):
+    print("📁 Criando novo arquivo categorias.json")
     categorias_iniciais = {
         "alimentacao": ["mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
                         "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
@@ -127,6 +131,25 @@ def responder():
             resposta.message(f"✅ Categoria *{nova_cat}* criada com: {', '.join(palavras)}")
         return str(resposta)
 
+    if texto.startswith("editar"):
+        partes = texto.split()
+        if len(partes) >= 4:
+            try:
+                indice = int(partes[1]) - 1
+                campo = partes[2]
+                novo_valor = " ".join(partes[3:])
+                if campo in ["valor", "setor", "mensagem"] and 0 <= indice < len(df):
+                    df.loc[indice, campo] = float(novo_valor) if campo == "valor" else novo_valor
+                    df.to_csv(CSV_FILE, index=False)
+                    resposta.message(f"✏️ Gasto #{indice+1} atualizado.")
+                else:
+                    resposta.message("❌ Campo inválido ou índice fora do alcance.")
+            except:
+                resposta.message("❌ Comando inválido. Ex: editar 1 valor 50")
+        else:
+            resposta.message("❌ Comando incompleto. Ex: editar 1 valor 50")
+        return str(resposta)
+
     valor, setor, descricao = extrair_dados(msg)
     if valor:
         nova_linha = {
@@ -139,10 +162,10 @@ def responder():
         df.to_csv(CSV_FILE, index=False)
         resposta.message(f"✅ Gasto de R$ {valor:.2f} em *{descricao}* registrado na categoria *{setor}*.")
     else:
-        resposta.message("❌ Não entendi. Exemplos:\n• gastei 20 no mercado\n• relatorio\n• nova categoria pet com racao, banho")
+        resposta.message("❌ Tente algo como: *gastei 30 no mercado*, *relatorio*, *total hoje*, *nova categoria lazer com praia, bar*")
     return str(resposta)
 
 if __name__ == "__main__":
     porta = int(os.environ.get("PORT", 10000))
-    print(f"🚀 Servidor rodando na porta {porta} — {DEBUG_VERSION}")
+    print(f"🚀 Servidor Flask rodando na porta {porta} — {DEBUG_VERSION}")
     app.run(host="0.0.0.0", port=porta)
