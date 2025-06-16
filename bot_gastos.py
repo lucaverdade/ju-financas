@@ -47,14 +47,16 @@ def salvar_categorias(categorias):
         json.dump(categorias, f, indent=2)
 
 def classificar_setor(texto):
-    texto = remover_acentos(texto.lower())
+    texto_limpo = remover_acentos(texto.lower())
     categorias = carregar_categorias()
+
     for setor, palavras in categorias.items():
         for palavra in palavras:
-            palavra = remover_acentos(palavra.lower())
-            if re.search(rf"\b{re.escape(palavra)}\b", texto):
+            palavra_limpa = remover_acentos(palavra.lower())
+            if palavra_limpa in texto_limpo:
                 return setor
     return "outros"
+
 
 def extrair_dados(msg):
     match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+).*(no|na|em)?\s*(.*)", msg.lower())
