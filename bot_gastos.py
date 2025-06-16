@@ -49,16 +49,19 @@ def classificar_setor(texto):
     texto_limpo = remover_acentos(texto.lower())
     categorias = carregar_categorias()
 
-    print(f"🔍 Classificando: '{texto}'")
+    print(f"🔍 [DEBUG] Tentando classificar: '{texto}' → '{texto_limpo}'")
 
     for setor, palavras in categorias.items():
         for palavra in palavras:
             palavra_limpa = remover_acentos(palavra.lower())
-            if re.search(rf"\b{re.escape(palavra_limpa)}\b", texto_limpo):
-                print(f"✅ Palavra-chave encontrada: '{palavra}' → setor '{setor}'")
+            padrao = rf"\b{re.escape(palavra_limpa)}\b"
+            if re.search(padrao, texto_limpo):
+                print(f"✅ [DEBUG] Palavra-chave encontrada: '{palavra}' → setor '{setor}'")
                 return setor
-    print("❌ Nenhuma palavra-chave encontrada. Retornando 'outros'")
+
+    print("❌ [DEBUG] Nenhuma palavra-chave casou. Retornando 'outros'")
     return "outros"
+
 
 
 def extrair_dados(msg):
