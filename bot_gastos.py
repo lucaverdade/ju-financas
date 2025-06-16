@@ -4,7 +4,10 @@ import pandas as pd
 import os, re, json, unicodedata
 from datetime import datetime, timedelta
 
-print("✅ Bot de gastos iniciado — vDEBUG 1.0")
+# Versão do bot para debug
+DEBUG_VERSION = "vDEBUG 1.1"
+
+print(f"✅ Bot de gastos iniciado — {DEBUG_VERSION}")
 
 app = Flask(__name__)
 CSV_FILE = "gastos.csv"
@@ -45,7 +48,6 @@ def salvar_categorias(categorias):
 def classificar_setor(texto):
     texto_limpo = remover_acentos(texto.lower())
     categorias = carregar_categorias()
-
     print(f"🔍 Classificando: '{texto}'")
 
     for setor, palavras in categorias.items():
@@ -76,7 +78,7 @@ def total_por_periodo(df, dias):
 # Rotas
 @app.route("/", methods=["GET"])
 def home():
-    return "Bot de gastos ativo."
+    return f"Bot de gastos ativo — {DEBUG_VERSION}"
 
 @app.route("/mensagem", methods=["POST"])
 def responder():
@@ -171,5 +173,5 @@ def responder():
 # 🔧 Início do app
 if __name__ == "__main__":
     porta = int(os.environ.get("PORT", 10000))
-    print(f"🚀 Servidor Flask rodando na porta {porta}")
+    print(f"🚀 Servidor Flask rodando na porta {porta} — {DEBUG_VERSION}")
     app.run(host="0.0.0.0", port=porta)
