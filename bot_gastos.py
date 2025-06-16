@@ -164,10 +164,8 @@ def responder():
     else:
         resposta.message("❌ Tente algo como: *gastei 30 no mercado*, *relatorio*, *total hoje*, *nova categoria lazer com praia, bar*")
     return str(resposta)
-    
-    if __name__ == "__main__":
-        import os
-        porta = int(os.environ.get("PORT", 10000))
-        app.run(host="0.0.0.0", port=porta)
 
-
+# 🔧 Início do app (fora de qualquer função)
+if __name__ == "__main__":
+    porta = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=porta)
