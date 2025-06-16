@@ -1,3 +1,4 @@
+
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 import pandas as pd
@@ -19,27 +20,18 @@ if not os.path.exists(CSV_FILE):
 if not os.path.exists(JSON_FILE):
     print("📁 Criando novo arquivo categorias.json")
     categorias_iniciais = {
-        "alimentacao": [
-            "mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
-            "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
-            "cafe", "açai", "outback", "pao de queijo"
-        ],
-        "lazer": [
-            "cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque",
-            "netflix", "spotify", "napraia", "festa da ana"
-        ],
-        "transporte": [
-            "uber", "99", "onibus", "gasolina", "combustivel", "metro", "transporte", "passagem"
-        ],
-        "casa": [
-            "aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"
-        ],
+        "alimentacao": ["mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
+                        "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
+                        "cafe", "açai", "outback", "pao de queijo"],
+        "lazer": ["cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque",
+                  "netflix", "spotify", "napraia", "festa da ana"],
+        "transporte": ["uber", "99", "onibus", "gasolina", "combustivel", "metro", "transporte", "passagem"],
+        "casa": ["aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"],
         "outros": []
     }
     with open(JSON_FILE, "w") as f:
         json.dump(categorias_iniciais, f, indent=2)
 
-# Funções auxiliares
 def remover_acentos(txt):
     return unicodedata.normalize("NFKD", txt).encode("ASCII", "ignore").decode("ASCII")
 
@@ -57,10 +49,9 @@ def classificar_setor(texto):
     for setor, palavras in categorias.items():
         for palavra in palavras:
             palavra_limpa = remover_acentos(palavra.lower())
-            if re.search(rf"\b{re.escape(palavra_limpa)}\b", texto_limpo):
-                print(f"✅ Palavra '{palavra}' encontrada → setor '{setor}'")
+            padrao = rf"\b{re.escape(palavra_limpa)}\b"
+            if re.search(padrao, texto_limpo):
                 return setor
-    print("❌ Nenhuma palavra-chave reconhecida. Retornando 'outros'")
     return "outros"
 
 def extrair_dados(msg):
@@ -68,10 +59,8 @@ def extrair_dados(msg):
     if match:
         valor = float(match.group(2).replace(",", "."))
         descricao = match.group(4).strip()
-        print(f"🟡 Mensagem: '{msg}' → Descrição: '{descricao}'")
         setor = classificar_setor(descricao)
         return valor, setor, descricao
-    print("❗ Mensagem não reconhecida:", msg)
     return None, None, None
 
 def total_por_periodo(df, dias):
@@ -79,7 +68,6 @@ def total_por_periodo(df, dias):
     df["data"] = pd.to_datetime(df["data"])
     return df[df["data"] >= limite]["valor"].sum()
 
-# Rotas
 @app.route("/", methods=["GET"])
 def home():
     return f"Bot de gastos ativo — {DEBUG_VERSION}"
@@ -174,7 +162,6 @@ def responder():
         resposta.message("❌ Tente algo como: *gastei 30 no mercado*, *relatorio*, *total hoje*, *nova categoria lazer com praia, bar*")
     return str(resposta)
 
-# Início da aplicação
 if __name__ == "__main__":
     porta = int(os.environ.get("PORT", 10000))
     print(f"🚀 Servidor Flask rodando na porta {porta} — {DEBUG_VERSION}")
