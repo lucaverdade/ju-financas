@@ -32,7 +32,7 @@ def extrair_dados(msg):
 
 @app.route("/", methods=["GET"])
 def home():
-    return "Bot de gastos ativo."
+    return "✅ Bot de gastos ativo."
 
 @app.route("/mensagem", methods=["POST"])
 def responder():
@@ -53,3 +53,8 @@ def responder():
     else:
         resposta.message("❌ Envie algo como: *Gastei 30 no mercado*")
     return str(resposta)
+
+# Adicione isso no final para funcionar no Render:
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
