@@ -166,7 +166,8 @@ def responder():
     return str(resposta)
     
     if __name__ == "__main__":
-    import os
-    porta = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=porta)
+        import os
+        porta = int(os.environ.get("PORT", 10000))
+        app.run(host="0.0.0.0", port=porta)
+
 
