@@ -57,15 +57,16 @@ def classificar_setor(texto):
                 return setor
     return "outros"
 
-
 def extrair_dados(msg):
     match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+).*(no|na|em)?\s*(.*)", msg.lower())
     if match:
         valor = float(match.group(2).replace(",", "."))
         descricao = match.group(4).strip()
+        print("🟡 Descrição:", descricao)
         setor = classificar_setor(descricao)
         return valor, setor, descricao
     return None, None, None
+
 
 def total_por_periodo(df, dias):
     limite = datetime.now() - timedelta(days=dias)
