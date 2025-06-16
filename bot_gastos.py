@@ -4,7 +4,7 @@ import pandas as pd
 import os, re, json, unicodedata
 from datetime import datetime, timedelta
 
-DEBUG_VERSION = "vDEBUG 1.4"
+DEBUG_VERSION = "vDEBUG 1.5"
 print(f"✅ Bot de gastos iniciado — {DEBUG_VERSION}")
 
 app = Flask(__name__)
@@ -19,13 +19,21 @@ if not os.path.exists(CSV_FILE):
 if not os.path.exists(JSON_FILE):
     print("📁 Criando novo arquivo categorias.json")
     categorias_iniciais = {
-        "alimentacao": ["mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
-                        "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
-                        "cafe", "açai", "outback", "pao de queijo"],
-        "lazer": ["cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque",
-                  "netflix", "spotify", "napraia", "festa da ana"],
-        "transporte": ["uber", "99", "onibus", "gasolina", "combustivel", "metro", "transporte", "passagem"],
-        "casa": ["aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"],
+        "alimentacao": [
+            "mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
+            "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
+            "cafe", "açai", "outback", "pao de queijo"
+        ],
+        "lazer": [
+            "cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque",
+            "netflix", "spotify", "napraia", "festa da ana"
+        ],
+        "transporte": [
+            "uber", "99", "onibus", "gasolina", "combustivel", "metro", "transporte", "passagem"
+        ],
+        "casa": [
+            "aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"
+        ],
         "outros": []
     }
     with open(JSON_FILE, "w") as f:
@@ -46,11 +54,10 @@ def salvar_categorias(categorias):
 def classificar_setor(texto):
     texto_limpo = remover_acentos(texto.lower())
     categorias = carregar_categorias()
-
     for setor, palavras in categorias.items():
         for palavra in palavras:
             palavra_limpa = remover_acentos(palavra.lower())
-            if palavra_limpa in texto_limpo:
+            if re.search(rf"\b{re.escape(palavra_limpa)}\b", texto_limpo):
                 print(f"✅ Palavra '{palavra}' encontrada → setor '{setor}'")
                 return setor
     print("❌ Nenhuma palavra-chave reconhecida. Retornando 'outros'")
