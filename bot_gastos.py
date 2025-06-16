@@ -5,7 +5,7 @@ import os, re, json, unicodedata
 from datetime import datetime, timedelta
 
 # Versão do bot para debug
-DEBUG_VERSION = "vDEBUG 1.2"
+DEBUG_VERSION = "vDEBUG 1.3"
 
 print(f"✅ Bot de gastos iniciado — {DEBUG_VERSION}")
 
@@ -47,31 +47,35 @@ def salvar_categorias(categorias):
 
 def classificar_setor(texto):
     texto_limpo = remover_acentos(texto.lower())
-    palavras_texto = re.findall(r'\b\w+\b', texto_limpo)
     categorias = carregar_categorias()
-
-    print(f"🔍 [DEBUG] Tentando classificar: '{texto}' → {palavras_texto}")
+    contagem_setores = {setor: 0 for setor in categorias}
 
     for setor, palavras in categorias.items():
         for palavra in palavras:
             palavra_limpa = remover_acentos(palavra.lower())
-            if palavra_limpa in palavras_texto:
-                print(f"✅ [DEBUG] Palavra-chave encontrada: '{palavra}' → setor '{setor}'")
-                return setor
+            if palavra_limpa in texto_limpo:
+                contagem_setores[setor] += 1
 
-    print("❌ [DEBUG] Nenhuma palavra-chave casou. Retornando 'outros'")
+    setor_mais_relevante = max(contagem_setores, key=contagem_setores.get)
+    if contagem_setores[setor_mais_relevante] > 0:
+        print(f"✅ [DEBUG] Setor detectado: '{setor_mais_relevante}' com {contagem_setores[setor_mais_relevante]} ocorrência(s)")
+        return setor_mais_relevante
+
+    print("❌ [DEBUG] Nenhuma palavra-chave encontrada. Retornando 'outros'")
     return "outros"
 
 def extrair_dados(msg):
-    match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+).*?\s(no|na|em)?\s*(.+)", msg.lower())
+    msg = msg.lower()
+    match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+)\s*(.*)", msg)
     if match:
         valor = float(match.group(2).replace(",", "."))
-        descricao = match.group(4).strip()
+        descricao = match.group(3).strip()
         print(f"🟡 Mensagem recebida: '{msg}' | Descrição extraída: '{descricao}'")
         setor = classificar_setor(descricao)
         return valor, setor, descricao
     print("❗ Mensagem não reconhecida:", msg)
     return None, None, None
+
 
 def total_por_periodo(df, dias):
     limite = datetime.now() - timedelta(days=dias)
