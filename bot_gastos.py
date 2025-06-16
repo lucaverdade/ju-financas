@@ -14,16 +14,27 @@ if not os.path.exists(CSV_FILE):
 
 if not os.path.exists(JSON_FILE):
     categorias_iniciais = {
-        "alimentacao": ["mercado", "comida", "padaria", "restaurante", "pizza", "açai"],
-        "transporte": ["uber", "onibus", "99", "metro", "gasolina", "combustivel"],
-        "lazer": ["cinema", "shopping", "bar", "balada", "festa", "show"],
-        "casa": ["aluguel", "condominio", "agua", "luz", "energia", "net", "internet"],
+        "alimentacao": [
+            "mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
+            "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
+            "cafe", "açai", "outback"
+        ],
+        "lazer": [
+            "cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque",
+            "netflix", "spotify", "napraia"
+        ],
+        "transporte": [
+            "uber", "99", "onibus", "gasolina", "combustivel", "metrô", "transporte", "passagem"
+        ],
+        "casa": [
+            "aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"
+        ],
         "outros": []
     }
     with open(JSON_FILE, "w") as f:
         json.dump(categorias_iniciais, f, indent=2)
 
-# Auxiliares
+# Funções auxiliares
 def remover_acentos(txt):
     return unicodedata.normalize("NFKD", txt).encode("ASCII", "ignore").decode("ASCII")
 
@@ -40,14 +51,13 @@ def classificar_setor(texto):
     categorias = carregar_categorias()
     for setor, palavras in categorias.items():
         for palavra in palavras:
-            if palavra in texto:
+            palavra = remover_acentos(palavra.lower())
+            if re.search(rf"\b{re.escape(palavra)}\b", texto):
                 return setor
     return "outros"
 
 def extrair_dados(msg):
-    msg = remover_acentos(msg.lower())
-    padrao = r"(gastei|gasto)\s*R?\$?\s*([\d.,]+)\s*(no|na|em)?\s*(.*)"
-    match = re.search(padrao, msg)
+    match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+).*(no|na|em)?\s*(.*)", msg.lower())
     if match:
         valor = float(match.group(2).replace(",", "."))
         descricao = match.group(4).strip()
@@ -140,7 +150,6 @@ def responder():
             resposta.message("❌ Comando incompleto. Ex: editar 1 valor 50")
         return str(resposta)
 
-    # Registro de gasto padrão
     valor, setor, descricao = extrair_dados(msg)
     if valor:
         nova_linha = {
@@ -153,5 +162,5 @@ def responder():
         df.to_csv(CSV_FILE, index=False)
         resposta.message(f"✅ Gasto de R$ {valor:.2f} em *{descricao}* registrado na categoria *{setor}*.")
     else:
-        resposta.message("❌ Tente algo como: *gastei 30 no mercado*, *relatorio*, *nova categoria saude com farmacia, remedio*")
+        resposta.message("❌ Tente algo como: *gastei 30 no mercado*, *relatorio*, *total hoje*, *nova categoria lazer com praia, bar*")
     return str(resposta)
