@@ -4,9 +4,7 @@ import pandas as pd
 import os, re, json, unicodedata
 from datetime import datetime, timedelta
 
-# Versão do bot para debug
-DEBUG_VERSION = "vDEBUG 1.3"
-
+DEBUG_VERSION = "vDEBUG 1.4"
 print(f"✅ Bot de gastos iniciado — {DEBUG_VERSION}")
 
 app = Flask(__name__)
@@ -23,9 +21,9 @@ if not os.path.exists(JSON_FILE):
     categorias_iniciais = {
         "alimentacao": ["mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
                         "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
-                        "cafe", "açai", "outback"],
+                        "cafe", "açai", "outback", "pao de queijo"],
         "lazer": ["cinema", "filme", "show", "shopping", "bar", "balada", "festa", "parque",
-                  "netflix", "spotify", "napraia"],
+                  "netflix", "spotify", "napraia", "festa da ana"],
         "transporte": ["uber", "99", "onibus", "gasolina", "combustivel", "metro", "transporte", "passagem"],
         "casa": ["aluguel", "condominio", "energia", "luz", "agua", "internet", "net", "claro"],
         "outros": []
@@ -48,34 +46,26 @@ def salvar_categorias(categorias):
 def classificar_setor(texto):
     texto_limpo = remover_acentos(texto.lower())
     categorias = carregar_categorias()
-    contagem_setores = {setor: 0 for setor in categorias}
 
     for setor, palavras in categorias.items():
         for palavra in palavras:
             palavra_limpa = remover_acentos(palavra.lower())
             if palavra_limpa in texto_limpo:
-                contagem_setores[setor] += 1
-
-    setor_mais_relevante = max(contagem_setores, key=contagem_setores.get)
-    if contagem_setores[setor_mais_relevante] > 0:
-        print(f"✅ [DEBUG] Setor detectado: '{setor_mais_relevante}' com {contagem_setores[setor_mais_relevante]} ocorrência(s)")
-        return setor_mais_relevante
-
-    print("❌ [DEBUG] Nenhuma palavra-chave encontrada. Retornando 'outros'")
+                print(f"✅ Palavra '{palavra}' encontrada → setor '{setor}'")
+                return setor
+    print("❌ Nenhuma palavra-chave reconhecida. Retornando 'outros'")
     return "outros"
 
 def extrair_dados(msg):
-    msg = msg.lower()
-    match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+)\s*(.*)", msg)
+    match = re.search(r"(gastei|gasto)\s*R?\$?\s*([\d,.]+)\s*(no|na|em)?\s*(.*)", msg.lower())
     if match:
         valor = float(match.group(2).replace(",", "."))
-        descricao = match.group(3).strip()
-        print(f"🟡 Mensagem recebida: '{msg}' | Descrição extraída: '{descricao}'")
+        descricao = match.group(4).strip()
+        print(f"🟡 Mensagem: '{msg}' → Descrição: '{descricao}'")
         setor = classificar_setor(descricao)
         return valor, setor, descricao
     print("❗ Mensagem não reconhecida:", msg)
     return None, None, None
-
 
 def total_por_periodo(df, dias):
     limite = datetime.now() - timedelta(days=dias)
@@ -96,7 +86,7 @@ def responder():
 
     if "relatorio" in texto:
         if df.empty:
-            resposta.message("📜 Nenhum gasto registrado ainda.")
+            resposta.message("📭 Nenhum gasto registrado ainda.")
         else:
             relatorio = df.groupby("setor")["valor"].sum().reset_index()
             total = df["valor"].sum()
@@ -124,7 +114,7 @@ def responder():
 
     if "listar categorias" in texto:
         categorias = carregar_categorias()
-        msg_cat = "📃 *Categorias cadastradas:*\n"
+        msg_cat = "📚 *Categorias cadastradas:*\n"
         for setor, palavras in categorias.items():
             msg_cat += f"• *{setor}*: {', '.join(palavras) if palavras else 'Nenhuma palavra associada'}\n"
         resposta.message(msg_cat)
@@ -153,7 +143,7 @@ def responder():
                 if campo in ["valor", "setor", "mensagem"] and 0 <= indice < len(df):
                     df.loc[indice, campo] = float(novo_valor) if campo == "valor" else novo_valor
                     df.to_csv(CSV_FILE, index=False)
-                    resposta.message(f"✍️ Gasto #{indice+1} atualizado.")
+                    resposta.message(f"✏️ Gasto #{indice+1} atualizado.")
                 else:
                     resposta.message("❌ Campo inválido ou índice fora do alcance.")
             except:
@@ -177,7 +167,7 @@ def responder():
         resposta.message("❌ Tente algo como: *gastei 30 no mercado*, *relatorio*, *total hoje*, *nova categoria lazer com praia, bar*")
     return str(resposta)
 
-# 🔧 Início do app
+# Início da aplicação
 if __name__ == "__main__":
     porta = int(os.environ.get("PORT", 10000))
     print(f"🚀 Servidor Flask rodando na porta {porta} — {DEBUG_VERSION}")
