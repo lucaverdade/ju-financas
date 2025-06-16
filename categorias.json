@@ -1,0 +1,55 @@
+{
+  "alimentacao": [
+    "mc",
+    "mcdonald",
+    "burger",
+    "pizza",
+    "lanche",
+    "restaurante",
+    "madeiro",
+    "ifood",
+    "habib",
+    "comida",
+    "padaria",
+    "mercado",
+    "supermercado",
+    "pao",
+    "cafe",
+    "açai",
+    "outback"
+  ],
+  "lazer": [
+    "cinema",
+    "filme",
+    "show",
+    "shopping",
+    "bar",
+    "balada",
+    "festa",
+    "parque",
+    "netflix",
+    "spotify",
+    "napraia"
+  ],
+  "transporte": [
+    "uber",
+    "99",
+    "onibus",
+    "gasolina",
+    "combustivel",
+    "metrô",
+    "transporte",
+    "passagem"
+  ],
+  "casa": [
+    "aluguel",
+    "condominio",
+    "energia",
+    "luz",
+    "agua",
+    "internet",
+    "net",
+    "claro"
+  ],
+  "outros": []
+}
