@@ -5,20 +5,17 @@ import pandas as pd
 import os, re, json, unicodedata
 from datetime import datetime, timedelta
 
-DEBUG_VERSION = "vDEBUG 2.0"
+DEBUG_VERSION = "v2.1"
 print(f"✅ Bot de gastos iniciado — {DEBUG_VERSION}")
 
 app = Flask(__name__)
 CSV_FILE = "gastos.csv"
 JSON_FILE = "categorias.json"
 
-# Inicializa arquivos
 if not os.path.exists(CSV_FILE):
-    print("📁 Criando novo arquivo de gastos.csv")
     pd.DataFrame(columns=["data", "valor", "setor", "mensagem"]).to_csv(CSV_FILE, index=False)
 
 if not os.path.exists(JSON_FILE):
-    print("📁 Criando novo arquivo categorias.json")
     categorias_iniciais = {
         "alimentacao": ["mc", "mcdonald", "burger", "pizza", "lanche", "restaurante", "madeiro",
                         "ifood", "habib", "comida", "padaria", "mercado", "supermercado", "pao",
@@ -49,7 +46,8 @@ def classificar_setor(texto):
     for setor, palavras in categorias.items():
         for palavra in palavras:
             palavra_limpa = remover_acentos(palavra.lower())
-            if palavra_limpa in texto_limpo:
+            padrao = r'\b' + re.escape(palavra_limpa) + r'\b'
+            if re.search(padrao, texto_limpo):
                 return setor
     return "outros"
 
@@ -88,9 +86,11 @@ def responder():
         else:
             relatorio = df.groupby("setor")["valor"].sum().reset_index()
             total = df["valor"].sum()
-            texto_resp = "📊 *Relatório por setor:*\n"
+            texto_resp = "📊 *Relatório por setor:*
+"
             for _, row in relatorio.iterrows():
-                texto_resp += f"• {row['setor'].capitalize()}: R$ {row['valor']:.2f}\n"
+                texto_resp += f"• {row['setor'].capitalize()}: R$ {row['valor']:.2f}
+"
             texto_resp += f"\n💰 *Total:* R$ {total:.2f}"
             resposta.message(texto_resp)
         return str(resposta)
@@ -112,9 +112,11 @@ def responder():
 
     if "listar categorias" in texto:
         categorias = carregar_categorias()
-        msg_cat = "📚 *Categorias cadastradas:*\n"
+        msg_cat = "📚 *Categorias cadastradas:*
+"
         for setor, palavras in categorias.items():
-            msg_cat += f"• *{setor}*: {', '.join(palavras) if palavras else 'Nenhuma palavra associada'}\n"
+            msg_cat += f"• *{setor}*: {', '.join(palavras) if palavras else 'Nenhuma palavra associada'}
+"
         resposta.message(msg_cat)
         return str(resposta)
 
