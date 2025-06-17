@@ -1,4 +1,3 @@
-
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 import pandas as pd
@@ -86,11 +85,9 @@ def responder():
         else:
             relatorio = df.groupby("setor")["valor"].sum().reset_index()
             total = df["valor"].sum()
-            texto_resp = "📊 *Relatório por setor:*
-"
+            texto_resp = "📊 *Relatório por setor:*\n"
             for _, row in relatorio.iterrows():
-                texto_resp += f"• {row['setor'].capitalize()}: R$ {row['valor']:.2f}
-"
+                texto_resp += f"• {row['setor'].capitalize()}: R$ {row['valor']:.2f}\n"
             texto_resp += f"\n💰 *Total:* R$ {total:.2f}"
             resposta.message(texto_resp)
         return str(resposta)
@@ -112,11 +109,9 @@ def responder():
 
     if "listar categorias" in texto:
         categorias = carregar_categorias()
-        msg_cat = "📚 *Categorias cadastradas:*
-"
+        msg_cat = "📚 *Categorias cadastradas:*\n"
         for setor, palavras in categorias.items():
-            msg_cat += f"• *{setor}*: {', '.join(palavras) if palavras else 'Nenhuma palavra associada'}
-"
+            msg_cat += f"• *{setor}*: {', '.join(palavras) if palavras else 'Nenhuma palavra associada'}\n"
         resposta.message(msg_cat)
         return str(resposta)
 
