@@ -4,7 +4,7 @@ import pandas as pd
 import os, re, json, unicodedata
 from datetime import datetime, timedelta
 
-DEBUG_VERSION = "v2.1"
+DEBUG_VERSION = "v2.2"
 print(f"✅ Bot de gastos iniciado — {DEBUG_VERSION}")
 
 app = Flask(__name__)
@@ -45,13 +45,12 @@ def classificar_setor(texto):
     for setor, palavras in categorias.items():
         for palavra in palavras:
             palavra_limpa = remover_acentos(palavra.lower())
-            padrao = r'\b' + re.escape(palavra_limpa) + r'\b'
-            if re.search(padrao, texto_limpo):
+            if palavra_limpa in texto_limpo:
                 return setor
     return "outros"
 
 def extrair_dados(msg):
-    padrao = re.search(r"(gastei|gasto)\s*(R?\$?\s*[\d,\.]+)[^\w]*(?:no|na|em)?\s*(.+)", msg.lower())
+    padrao = re.search(r"(gastei|gasto)\s*(R?\$?\s*[\d,.]+)[^\w]*(?:no|na|em)?\s*(.+)", msg.lower())
     if padrao:
         valor_str = padrao.group(2).replace("R$", "").replace(",", ".").strip()
         try:
